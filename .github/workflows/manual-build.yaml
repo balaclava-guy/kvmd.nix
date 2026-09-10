@@ -3,8 +3,10 @@ name: Build NixOS SD Image
 on:
   # Allows manual triggering from the GitHub Actions tab
   workflow_dispatch:
-  # Automatically triggers on pushes to the main branch
-
+  # Dummy push
+   push:
+      branches:
+        - '*'
 jobs:
   build-image:
     name: Build Pi4 SD Image
