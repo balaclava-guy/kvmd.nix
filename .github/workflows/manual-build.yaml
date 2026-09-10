@@ -30,6 +30,11 @@ jobs:
       - name: Setup Magic Nix Cache
         uses: DeterminateSystems/magic-nix-cache-action@v4
 
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v17
+        with:
+          name: aostanin
+
       - name: Build NixOS SD Image
         run: |
           nix build "github:balaclava-guy/kvmd.nix#nixosConfigurations.v2-hdmi-rpi4.config.system.build.sdImage"
