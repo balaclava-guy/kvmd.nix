@@ -1,4 +1,6 @@
 {
+  config,
+  lib,
   pkgs,
   kvmdPackages,
   kvmdNixosHardware,
@@ -31,6 +33,19 @@
       patch = "${patchDir}/1103-pikvm-gadget-msd-Remove-string-IDs.patch";
     }
   ];
+  # V3's optional USB microphone and unprivileged NBD backend need these
+  # PiKVM fixes. Keep the existing V2 kernel unchanged.
+  v3KernelPatches =
+    map (name: {
+      inherit name;
+      patch = "${patchDir}/${name}.patch";
+    }) [
+      "1201-pikvm-uac-fixed-uninitialized-set_audio"
+      "1202-pikvm-uac-remove-string-ids"
+      "1401-pikvm-nbd-fine-tuning"
+      "1501-pikvm-tc358743-lanes-diagnostics"
+      "1502-pikvm-tc358743-better-lanes-calculation"
+    ];
 in {
   # nixos-hardware mkForces sdImage.populateFirmwareCommands whenever an
   # sd-image module is imported, gated on neither firmware.enable nor this, so
@@ -87,7 +102,10 @@ in {
     baseKernel = pkgs.callPackage "${kvmdNixosHardware}/raspberry-pi/common/kernel.nix" {rpiVersion = 4;};
   in
     pkgs.linuxPackagesFor (baseKernel.override {
-      argsOverride.kernelPatches = baseKernel.kernelPatches ++ pikvmKernelPatches;
+      argsOverride.kernelPatches =
+        baseKernel.kernelPatches
+        ++ pikvmKernelPatches
+        ++ lib.optionals (config.services.kvmd.variant == "v3-hdmi-rpi4") v3KernelPatches;
     });
 
   # /dev/vcio defaults to root-only 0600; kvmd runs unprivileged and needs
