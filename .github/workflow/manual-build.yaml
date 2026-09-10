@@ -1,0 +1,52 @@
+name: Build NixOS SD Image
+
+on:
+  # Allows manual triggering from the GitHub Actions tab
+  workflow_dispatch:
+  # Automatically triggers on pushes to the main branch
+  push:
+    branches:
+      - main
+
+jobs:
+  build-image:
+    name: Build Pi4 SD Image
+    # Utilize GitHub-hosted native ARM64 hardware
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          # Explicitly enables flakes and experimental Nix features
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Automatically caches Nix store paths to GitHub Actions storage.
+      # Zero token configuration required.
+      - name: Setup Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v4
+
+      - name: Build NixOS SD Image
+        run: |
+          nix build "github:balaclava-guy/kvmd.nix#nixosConfigurations.v2-hdmi-rpi4.config.system.build.sdImage"
+
+      - name: Find and Prepare Artifact
+        id: image-path
+        run: |
+          # Resolve the symlink 'result' to get the actual nix store path
+          REAL_PATH=$(readlink -f result)
+          echo "Image folder path: $REAL_PATH"
+          echo "dir=$REAL_PATH" >> $GITHUB_OUTPUT
+
+      - name: Upload SD Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nixos-v2-hdmi-rpi4-sdImage
+          path: ${{ steps.image-path.outputs.dir }}/*
+          # Retaining for 7 days saves repository storage space
+          retention-days: 7
