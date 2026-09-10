@@ -2,9 +2,7 @@ name: Build NixOS SD Image
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - '*'
+
 jobs:
   build-image:
     name: Build Pi4 SD Image
