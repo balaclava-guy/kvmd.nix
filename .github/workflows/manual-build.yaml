@@ -23,11 +23,6 @@ jobs:
             experimental-features = nix-command flakes
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Automatically caches Nix store paths to GitHub Actions storage.
-      # Zero token configuration required.
-      - name: Setup Magic Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@v4
-
       - name: Setup Cachix
         uses: cachix/cachix-action@v17
         with:
@@ -35,7 +30,7 @@ jobs:
 
       - name: Build NixOS SD Image
         run: |
-          nix build "github:balaclava-guy/kvmd.nix#nixosConfigurations.v2-hdmi-rpi4.config.system.build.sdImage"
+          nix build "github:balaclava-guy/kvmd.nix#nixosConfigurations.v3-hdmi-rpi4.config.system.build.sdImage"
 
       - name: Find and Prepare Artifact
         id: image-path
@@ -48,7 +43,7 @@ jobs:
       - name: Upload SD Image Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nixos-v2-hdmi-rpi4-sdImage
+          name: nixos-v3-hdmi-rpi4-sdImage
           path: ${{ steps.image-path.outputs.dir }}/*
           # Retaining for 7 days saves repository storage space
           retention-days: 7
